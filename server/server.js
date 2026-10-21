@@ -100,6 +100,7 @@ app.post("/register",async(req,res)=>{
         
         if(err)
         {
+            
             return res.status(400).json({
                 status:false,
                 message:"Failed To Check The Mail"
