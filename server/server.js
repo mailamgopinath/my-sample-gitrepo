@@ -97,6 +97,7 @@ app.post("/register",async(req,res)=>{
     }
     let checkmail='select id from register where email=?';
     db.query(checkmail,[email],async(err,result)=>{
+        
         if(err)
         {
             return res.status(400).json({
