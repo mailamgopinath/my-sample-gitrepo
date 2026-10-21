@@ -32,60 +32,6 @@ db.connect((err) => {
     console.log("MySQL connected successfully");
 
 });
-// app.post("/register",async(req,res)=>{
-//     let {name,email,password}=req.body;
-//     if(!name || !email || !password)
-//     {
-//         return res.status(400).json({
-//             status: false,
-//             message: "All fields are required"
-//         });
-//     }
-//     let checkemail='select id from register where email=?';
-//     db.query(checkemail,[email],async(err,result)=>{
-//         if(err)
-//         {
-//             return res.status(500).json({
-//                 status:false,
-//                 message:"Can't Find The Email"
-//             })
-//         }
-//         else if(result.length>0)
-//         {
-//             return res.status(409).json({
-//                 status:true,
-//                 message:"Email Already Exists"
-//             })
-//         }
-//         try{
-//             let hashpassword=await bcrypt.hash(password,10);
-//             let sql='insert into register(name,email,password) values(?,?,?)';
-//             db.query(sql,[name,email,hashpassword],(err,result)=>{
-//                 if(err)
-//                 {
-//                     return res.status(400).json({
-//                         status:false,
-//                         message:"Registration Failed",
-//                         error:err.message
-//                     })
-//                 }
-//                 else{
-//                     return res.status(200).json({
-//                         message:'registration Successfully Document',
-//                         status:200
-//                     })
-//                 }
-//             })
-//         }
-//         catch(error){
-//             console.log(error);
-//             return res.status(500).json({
-//                 status:false,
-//                 message:"An Error Occurred During Registration"
-//             })
-//         }
-//     })
-// })
 app.post("/register",async(req,res)=>{
     let {name,email,password}=req.body;
     if(!name || !email || !password)
