@@ -135,7 +135,7 @@ app.post("/register",async(req,res)=>{
         }
         catch(error)
         {
-            console.log(error);
+            // console.log(error);
             return res.status(400).json({
                 status:false,
                 message:"An Error Occurs During Registration "
