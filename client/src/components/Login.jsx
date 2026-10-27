@@ -2,12 +2,14 @@ import axios from "axios";
 import React from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 function Login()
 {
     let [loginvalue,setLoginValue]=useState({
         email:"",
         password:""
     })
+    let navigate=useNavigate();
     let [inputError,setInputError]=useState({});
     let [message,setMessage]=useState("");
     let validate=()=>{
@@ -49,6 +51,9 @@ function Login()
                     email:"",
                     password:""
                 })
+                 navigate("/dashboard", {
+                    replace: true
+                });
             }
         }
         catch(error){

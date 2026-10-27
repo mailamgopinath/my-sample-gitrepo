@@ -47,6 +47,38 @@ db.connect((err) => {
         console.log(`Server running on http://localhost:${port}`);
     });
 });
+// Authentication Middleware
+function verifyToken(req, res, next) {
+    const token = req.cookies.Token;
+
+    if (!token) {
+        return res.status(401).json({
+            status: false,
+            message: "Please Login First"
+        });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+
+        // Store authenticated user details in req.user
+        req.user = decoded;
+
+        next();
+    } catch (error) {
+        res.clearCookie("Token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/"
+        });
+
+        return res.status(401).json({
+            status: false,
+            message: "Invalid or Expired Token. Please Login Again"
+        });
+    }
+}
 app.post("/register",async(req,res)=>{
     let {name,email,password}=req.body;
     if(!name || !email || !password){
@@ -135,12 +167,19 @@ app.post("/login",async(req,res)=>{
                     },
                     JWT_SECRET,
                     {
-                        expiresIn:"1h"
+                        expiresIn:"5s"
                     }
                 )
+                // res.cookie("Token", token, {
+                //     httpOnly: true,
+                //     secure: false, // Use true with HTTPS in production
+                //     sameSite: "lax",
+                //     maxAge: 60 * 60 * 1000,
+                //     path: "/"
+                // });
                 res.cookie("Token", token, {
                     httpOnly: true,
-                    secure: false, // Use true with HTTPS in production
+                    secure: process.env.NODE_ENV === "production",
                     sameSite: "lax",
                     maxAge: 60 * 60 * 1000,
                     path: "/"
@@ -293,3 +332,29 @@ app.delete('/api/students/:id',(req,res)=>{
         })
     })
 })
+// Protected Dashboard API
+app.get("/api/dashboard", verifyToken, (req, res) => {
+    return res.status(200).json({
+        status: true,
+        message: "Welcome to Dashboard",
+        user: {
+            id: req.user.id,
+            name: req.user.name,
+            email: req.user.email
+        }
+    });
+});
+// Logout API
+app.post("/logout", (req, res) => {
+    res.clearCookie("Token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/"
+    });
+
+    return res.status(200).json({
+        status: true,
+        message: "Logout Successfully"
+    });
+});
