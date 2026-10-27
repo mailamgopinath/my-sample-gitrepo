@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-
-const API = "http://localhost:8000";
+import { API_BASE_URL } from "./config/api";
 
 function Dashboard() {
     const [user, setUser] = useState(null);
@@ -14,7 +13,7 @@ function Dashboard() {
         const fetchDashboard = async () => {
             try {
                 const response = await axios.get(
-                    `${API}/api/dashboard`,
+                    `${API_BASE_URL}/api/dashboard`,
                     {
                         withCredentials: true
                     }
@@ -41,7 +40,7 @@ function Dashboard() {
     const handleLogout = async () => {
         try {
             await axios.post(
-                `${API}/logout`,
+                `${API_BASE_URL}/logout`,
                 {},
                 {
                     withCredentials: true

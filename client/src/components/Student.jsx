@@ -1,8 +1,9 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
 
-const API = "http://localhost:8000/api/students";
+const API = `${API_BASE_URL}/api/students`;
 const EMPTY_STUDENT = { name: "", email: "", course: "" };
 
 function Student() {

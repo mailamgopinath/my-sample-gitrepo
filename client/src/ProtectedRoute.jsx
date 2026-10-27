@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Navigate, Outlet } from "react-router-dom";
-
-const API = "http://localhost:8000";
+import { API_BASE_URL } from "./config/api";
 
 function ProtectedRoute({ requiredRole }) {
     const [user, setUser] = useState(null);
@@ -14,7 +13,7 @@ function ProtectedRoute({ requiredRole }) {
         const checkAuthentication = async () => {
             try {
                 const response = await axios.get(
-                    `${API}/api/dashboard`,
+                    `${API_BASE_URL}/api/dashboard`,
                     {
                         withCredentials: true
                     }

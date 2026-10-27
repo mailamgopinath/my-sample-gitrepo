@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
 
 function Login() {
     const [loginValue, setLoginValue] = useState({ email: "", password: "" });
@@ -35,7 +36,7 @@ function Login() {
         setIsSubmitting(true);
         setMessage("");
         try {
-            await axios.post("http://localhost:8000/login", loginValue, {
+            await axios.post(`${API_BASE_URL}/login`, loginValue, {
                 withCredentials: true
             });
             navigate("/dashboard", { replace: true });
