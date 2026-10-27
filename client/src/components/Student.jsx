@@ -44,7 +44,7 @@ function Student(){
   }
   let handleFetch=async()=>{
     try{
-      let response=await axios.get(API);
+      let response=await axios.get(API, { withCredentials: true });
       console.log(response);
       setStudents(response.data.data);
     }
@@ -69,10 +69,10 @@ function Student(){
     try{
       let response;
       if(editId !== null){
-        response=await axios.put(`${API}/${editId}`,student)
+        response=await axios.put(`${API}/${editId}`,student,{withCredentials:true})
       }
       else{
-        response=await axios.post(`${API}`,student);
+        response=await axios.post(`${API}`,student,{withCredentials:true});
       }
       setMessage(response.data.message);
       setInputError({});
@@ -108,7 +108,7 @@ function Student(){
       return ;
     }
     try{
-      let response= await axios.delete(`${API}/${id}`);
+      let response= await axios.delete(`${API}/${id}`,{withCredentials:true});
       console.log(response);
       if(editId === id){
         setStudent({

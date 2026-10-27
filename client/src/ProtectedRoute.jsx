@@ -4,7 +4,8 @@ import { Navigate, Outlet } from "react-router-dom";
 
 const API = "http://localhost:8000";
 
-function ProtectedRoute() {
+function ProtectedRoute({ requiredRole }) {
+    const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(null);
 
     useEffect(() => {
@@ -21,8 +22,9 @@ function ProtectedRoute() {
 
                 if (active) {
                     setIsAuthenticated(response.data.status === true);
+                    setUser(response.data.user);
                 }
-            } catch (error) {
+            } catch {
                 if (active) {
                     setIsAuthenticated(false);
                 }
@@ -42,6 +44,10 @@ function ProtectedRoute() {
 
     if (!isAuthenticated) {
         return <Navigate to="/" replace />;
+    }
+
+    if (requiredRole && user?.role !== requiredRole) {
+        return <Navigate to="/dashboard" replace />;
     }
 
     return <Outlet />;

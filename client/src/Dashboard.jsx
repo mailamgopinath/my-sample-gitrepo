@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const API = "http://localhost:8000";
 
@@ -72,6 +72,13 @@ function Dashboard() {
             <p>User ID: {user.id}</p>
 
             <p>Email: {user.email}</p>
+            <p>Role: {user.role}</p>
+
+            {user.role === "faculty" && (
+                <p>
+                    <Link to="/student">Manage students</Link>
+                </p>
+            )}
 
             <button onClick={handleLogout}>
                 Logout

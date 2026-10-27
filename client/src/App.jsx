@@ -15,7 +15,9 @@ function App() {
          <Routes>
             <Route path='/' element={<Login/>}/>
             <Route path='/register' element={<Register/>}/>
-            <Route path='/student' element={<Student/>}/>
+            <Route element={<ProtectedRoute requiredRole="faculty" />}>
+                <Route path="/student" element={<Student />} />
+            </Route>
             <Route element={<ProtectedRoute />}>
                 <Route
                     path="/dashboard"

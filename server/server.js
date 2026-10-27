@@ -79,6 +79,18 @@ function verifyToken(req, res, next) {
         });
     }
 }
+function requireRole(role) {
+    return (req, res, next) => {
+        if (req.user.role !== role) {
+            return res.status(403).json({
+                status: false,
+                message: "You do not have permission to access this resource"
+            });
+        }
+
+        next();
+    };
+}
 app.post("/register",async(req,res)=>{
     let {name,email,password}=req.body;
     if(!name || !email || !password){
@@ -103,7 +115,7 @@ app.post("/register",async(req,res)=>{
         }
         try{
             let hashpassword=await bcrypt.hash(password,10);
-            let mysql='insert into register(name,email,password) values(?,?,?)';
+            let mysql="insert into register(name,email,password,role) values(?,?,?,'student')";
             db.query(mysql,[name,email,hashpassword],(err,result)=>{
                 if(err){
                     return res.status(405).json({
@@ -136,7 +148,7 @@ app.post("/login",async(req,res)=>{
             message:"All Fields Are required"
         })
     }
-    let checkemail='select id,name,email,password from register where email=?';
+    let checkemail='select id,name,email,password,role from register where email=?';
     db.query(checkemail,[email],async(err,result)=>{
         if(err){
             return res.status(400).json({
@@ -163,11 +175,12 @@ app.post("/login",async(req,res)=>{
                 let token=jwt.sign({
                         id:user.id,
                         name:user.name,
-                        email:user.email
+                        email:user.email,
+                        role:user.role
                     },
                     JWT_SECRET,
                     {
-                        expiresIn:"5s"
+                        expiresIn:"1h"
                     }
                 )
                 // res.cookie("Token", token, {
@@ -191,6 +204,7 @@ app.post("/login",async(req,res)=>{
                         id:user.id,
                         email:user.email,
                         name:user.name,
+                        role:user.role
                     }
                 })
             }
@@ -204,7 +218,7 @@ app.post("/login",async(req,res)=>{
         }
     })
 })
-app.get("/api/students",(req,res)=>{
+app.get("/api/students",verifyToken,requireRole("faculty"),(req,res)=>{
     let sql='select * from students order by id asc';
     db.query(sql,(err,result)=>{
         if(err)
@@ -225,7 +239,7 @@ app.get("/api/students",(req,res)=>{
 })
 
 // 2. POST - Add Student
-app.post('/api/students',(req,res)=>{
+app.post('/api/students',verifyToken,requireRole("faculty"),(req,res)=>{
     let {name,email,course}=req.body;
     if(!name || !email || !course){
         return res.status(400).json({
@@ -252,7 +266,7 @@ app.post('/api/students',(req,res)=>{
 })
 
 // 3. PUT - Update Student
-app.put('/api/students/:id',(req,res)=>{
+app.put('/api/students/:id',verifyToken,requireRole("faculty"),(req,res)=>{
     let {id}=req.params;
     let {name,email,course}=req.body;
     if(!name || !email || !course){
@@ -296,7 +310,7 @@ app.put('/api/students/:id',(req,res)=>{
 })
 
 // 4. DELETE - Delete Student
-app.delete('/api/students/:id',(req,res)=>{
+app.delete('/api/students/:id',verifyToken,requireRole("faculty"),(req,res)=>{
     let {id}=req.params;
     let checksql='select id from students where id=?';
     db.query(checksql,[id],(err,result)=>{
@@ -340,7 +354,8 @@ app.get("/api/dashboard", verifyToken, (req, res) => {
         user: {
             id: req.user.id,
             name: req.user.name,
-            email: req.user.email
+            email: req.user.email,
+            role: req.user.role
         }
     });
 });
