@@ -1,40 +1,48 @@
-import axios from 'axios';
-import React from 'react';
-import { useState } from 'react';
-import { useEffect } from 'react';
+import axios from "axios";
+import React from "react";
+import { useState } from "react";
+import { useEffect } from "react";
 const API='http://localhost:8000/api/students';
-function Student()
-{
+function Student(){
   let [student,setStudent]=useState({
     name:"",
     email:"",
     course:""
-  });
+  })
   let [students,setStudents]=useState([]);
   let [editId,setEditId]=useState(null);
   let [inputError,setInputError]=useState({});
   let [message,setMessage]=useState("");
   let validate=()=>{
-      const error = {};
-      if (!student.name.trim()) {
-          error.name = "Name is required";
-      } else if (student.name.trim().length < 3) {
-          error.name = "Name must contain at least 3 characters";
-      }
-      if (!student.email.trim()) {
-          error.email = "Email is required";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email.trim())) {
-          error.email = "Enter a valid email address";
-      }
-      if (!student.course.trim()) {
-          error.course = "Course is required";
-      } else if (student.course.trim().length < 3) {
-          error.course = "Course must contain at least 6 characters";
-      }
-      setInputError(error);
-      return Object.keys(error).length===0;
+    let error={};
+    if(!student.name.trim().length){
+      error.name="Name Field Is required"
+    }
+    else if(student.name.trim().length<5)
+    {
+      error.name="The Name Field Must Contain 5 Characters";
+    }
+    if(!student.email.trim()){
+      error.email="The Email Field Is Required";
+    }
+    if(!student.course.trim().length){
+      error.course="The Course Field Is required"
+    }
+    else if(student.course.trim().length<3){
+      error.course="The Course Field Must Contain Above 3 Characters";
+    }
+    setInputError(error);
+    return Object.keys(error).length===0;
   }
-  let fetchStudentData=async()=>{
+  let handleChange=(e)=>{
+    let {name,value}=e.target;
+    setStudent((preValue)=>{
+      return ({
+        ...preValue,[name]:value
+      })
+    })
+  }
+  let handleFetch=async()=>{
     try{
       let response=await axios.get(API);
       console.log(response);
@@ -42,39 +50,26 @@ function Student()
     }
     catch(error){
       console.log(error);
-      if(error.response && error.response.data && error.response.data.message)
-      {
+      if(error.response && error.response.data && error.response.data.message){
         setMessage(error.response.data.message);
       }
       else{
-        setMessage(error.message);
+        setMessage(error.message)
       }
     }
   }
   useEffect(()=>{
-    fetchStudentData();
-  },[])
-  let handleChange=(e)=>{
-    let {name,value}=e.target;
-    setStudent((preValue)=>{
-      return (
-        {
-          ...preValue,[name]:value
-        }
-      )
-    })
-  }
+    handleFetch();
+  },[]);
   let handleSubmit=async(e)=>{
     e.preventDefault();
-    if(!validate())
-    {
+    if(!validate()){
       return ;
     }
     try{
       let response;
-      if( editId !== id )
-      {
-        response= await axios.put(`${API}/${editId}`,student);
+      if(editId !== null){
+        response=await axios.put(`${API}/${editId}`,student)
       }
       else{
         response=await axios.post(`${API}`,student);
@@ -87,12 +82,11 @@ function Student()
         course:""
       })
       setEditId(null);
-      await fetchStudentData();
+      await handleFetch();
     }
     catch(error){
       console.log(error);
-      if(error.response && error.response.data && error.response.data.message)
-      {
+      if(error.response && error.response.data && error.response.data.message){
         setMessage(error.response.data.message);
       }
       else{
@@ -100,26 +94,127 @@ function Student()
       }
     }
   }
-
+  let handleEdit=(item)=>{
+    setStudent({
+      name:item.name,
+      email:item.email,
+      course:item.course
+    })
+    setEditId(item.id);
+    setMessage("");
+  }
+  let handleDelete=async(id)=>{
+    if(!window.confirm("Are U Sure Want To Delete The Student Details")){
+      return ;
+    }
+    try{
+      let response= await axios.delete(`${API}/${id}`);
+      console.log(response);
+      if(editId === id){
+        setStudent({
+          name:"",email:"",course:""
+        })
+        setEditId(null);
+        setMessage("");
+      }
+    }
+    catch(error){
+      console.log(error);
+      if(error.response && error.response.data && error.response.data.message){
+        setMessage(error.response.data.message);
+      }
+      else{
+        setMessage(error.message);
+      }
+    }
+  }
+  let handleCancel=()=>{
+    setEditId(null);
+    setMessage("");
+    setInputError({});
+    setStudent({
+      name:"",
+      email:"",
+      course:""
+    })
+  }
   return (
     <>
       <div>
           <div>
               <div>
-                <h1>Student Master CRUD</h1>
+                  <h1>Student Master CRUD</h1>
               </div>
               <div>
-                <form>
-                    <div>
-                      <label htmlFor="name">Student Name</label>
-                      <input type="text" name='name' placeholder='Enter Student Name' value={student.name} onChange={handleChange}/>
-                    </div>
-                    <div>
-                      <label htmlFor="email">Student Email</label>
-                      <input type="email" name='email' placeholder='Enter Student Email' value={student.value} onChange={handleChange}/>
-                    </div>
+                <form onSubmit={handleSubmit}>
+                  <div>
+                    <label htmlFor="name">Student Name</label>
+                    <input type="text" name="name" placeholder="Enter Student Name" value={student.name} onChange={handleChange}/>
+                    { inputError.name && ( <h3 style={{color:"red"}}>{inputError.name}</h3> ) }
+                  </div>
+                  <div>
+                    <label htmlFor="email">Student Email</label>
+                    <input type="email" name="email" placeholder="Enter Student Email" value={student.email} onChange={handleChange}/>
+                    { inputError.email && ( <h3 style={{color:"red"}}>{inputError.email}</h3> ) }
+                  </div>
+                  <div>
+                    <label htmlFor="course">Student Course</label>
+                    <input type="text" name="course" placeholder="Enter Student Course" value={student.course} onChange={handleChange}/>
+                    { inputError.course && ( <h3 style={{color:"red"}}>{inputError.course}</h3> ) }
+                  </div>
+                  {
+                    message && ( <h2>{message}</h2> )
+                  }
+                  <div>
+                    <button type="submit">
+                      {
+                        editId !== null ? "Update Student" : "Add Student"
+                      }
+                    </button>
+                  </div>
+                  <div>
+                    <button>cancel</button>
+                  </div>
                 </form>
               </div>
+          </div>
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <th>S No</th>
+                  <th>Student Name</th>
+                  <th>Student Email</th>
+                  <th>Student Course</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  students.length===0 ? (
+                    <tr>
+                      <td>No Records Present</td>
+                    </tr>
+                  ) :
+                  (
+                    students.map((item)=>{
+                      return (
+                        <tr key={item.id}>
+                          <td>{item.id}</td>
+                          <td>{item.name}</td>
+                          <td>{item.email}</td>
+                          <td>{item.course}</td>
+                          <td>
+                            <button type="submit" onClick={()=>{handleEdit(item)}}>EDIT</button>
+                            <button type="submit" onClick={()=>{handleDelete(item.id)}}>DELETE</button>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )
+                }
+              </tbody>
+            </table>
           </div>
       </div>
     </>
@@ -142,26 +237,26 @@ export default Student;
 //   let [inputError,setInputError]=useState({});
 //   let [message,setMessage]=useState("");
 //   let [editId,setEditId]=useState(null);
-  // let validate=()=>{
-  //    const error = {};
-  //       if (!student.name.trim()) {
-  //           error.name = "Name is required";
-  //       } else if (student.name.trim().length < 3) {
-  //           error.name = "Name must contain at least 3 characters";
-  //       }
-  //       if (!student.email.trim()) {
-  //           error.email = "Email is required";
-  //       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email.trim())) {
-  //           error.email = "Enter a valid email address";
-  //       }
-  //       if (!student.course.trim()) {
-  //           error.course = "Course is required";
-  //       } else if (student.course.trim().length < 3) {
-  //           error.course = "Course must contain at least 6 characters";
-  //       }
-  //       setInputError(error);
-  //       return Object.keys(error).length===0;
-  // }
+//   let validate=()=>{
+//      const error = {};
+//         if (!student.name.trim()) {
+//             error.name = "Name is required";
+//         } else if (student.name.trim().length < 3) {
+//             error.name = "Name must contain at least 3 characters";
+//         }
+//         if (!student.email.trim()) {
+//             error.email = "Email is required";
+//         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(student.email.trim())) {
+//             error.email = "Enter a valid email address";
+//         }
+//         if (!student.course.trim()) {
+//             error.course = "Course is required";
+//         } else if (student.course.trim().length < 3) {
+//             error.course = "Course must contain at least 6 characters";
+//         }
+//         setInputError(error);
+//         return Object.keys(error).length===0;
+//   }
 //   let fetchStudent=async()=>{
 //     try{
 //       let response=await axios.get(API);

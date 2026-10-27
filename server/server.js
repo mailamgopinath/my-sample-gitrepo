@@ -4,10 +4,13 @@ const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql");
 const bcrypt = require("bcryptjs");
+const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+// const { data } = require("react-router-dom");
 const JWT_SECRET = process.env.JWT_SECRET || "mySecretKey";
 const app = express();
 const port = Number(process.env.PORT || 8000);
+app.use(cookieParser());
 
 app.use(cors({
     origin: process.env.FRONTEND_ORIGIN || "http://localhost:5173",
@@ -44,17 +47,16 @@ db.connect((err) => {
         console.log(`Server running on http://localhost:${port}`);
     });
 });
-
-app.post('/register',async(req,res)=>{
+app.post("/register",async(req,res)=>{
     let {name,email,password}=req.body;
     if(!name || !email || !password){
-        return res.status(500).json({
+        return res.status(400).json({
             status:false,
             message:"All Fields Are Required"
         })
     }
-    let checkemail='select id from register where email=?';
-    db.query(checkemail,[email],async(err,result)=>{
+    let checkemil='select id from register where email=?';
+    db.query(checkemil,[email],async(err,result)=>{
         if(err){
             return res.status(400).json({
                 status:false,
@@ -62,45 +64,44 @@ app.post('/register',async(req,res)=>{
             })
         }
         if(result.length>0){
-            return res.status(400).json({
+            return res.status(409).json({
                 status:false,
                 message:"Email Already Exists"
             })
         }
         try{
             let hashpassword=await bcrypt.hash(password,10);
-            let mysql='insert into register(name,email,password) value(?,?,?)';
+            let mysql='insert into register(name,email,password) values(?,?,?)';
             db.query(mysql,[name,email,hashpassword],(err,result)=>{
                 if(err){
-                    return res.status(404).json({
+                    return res.status(405).json({
                         status:false,
-                        message:"Registeration failed to done"
+                        message:"Registeration Failed"
                     })
                 }
                 else{
-                    return res.status(200).json({
+                    return res.status(201).json({
                         status:true,
-                        message:"Registeration DOne Successfully"
+                        message:"Registration Successfully Done"
                     })
                 }
             })
         }
         catch(error){
             console.log(error);
-            return res.status(400).json({
+            return res.status(500).json({
                 status:false,
-                message:"Internal Problem Please Check It Once"
+                message:"Error Occurs in Internal Server"
             })
         }
     })
 })
-app.post('/login',async(req,res)=>{
+app.post("/login",async(req,res)=>{
     let {email,password}=req.body;
-    if(!email || !password)
-    {
+    if(!email || !password){
         return res.status(400).json({
-            statue:false,
-            message:"All Fields Are Required"
+            status:false,
+            message:"All Fields Are required"
         })
     }
     let checkemail='select id,name,email,password from register where email=?';
@@ -108,11 +109,11 @@ app.post('/login',async(req,res)=>{
         if(err){
             return res.status(400).json({
                 status:false,
-                message:"Check To Find The Email"
+                message:"Failed To Check The Email"
             })
         }
         if(result.length===0){
-            return res.status.json({
+            return res.status(400).json({
                 status:false,
                 message:"Email Not Found"
             })
@@ -123,36 +124,43 @@ app.post('/login',async(req,res)=>{
             if(!checkpassword){
                 return res.status(400).json({
                     status:false,
-                    message:"Invalid Email Are Password"
+                    message:"Failed To Login Please Check It"
                 })
             }
             else{
-                const token =jwt.sign({
+                let token=jwt.sign({
                         id:user.id,
                         name:user.name,
                         email:user.email
                     },
                     JWT_SECRET,
                     {
-                        expiresIn:'1h'
+                        expiresIn:"1h"
                     }
                 )
+                res.cookie("Token", token, {
+                    httpOnly: true,
+                    secure: false, // Use true with HTTPS in production
+                    sameSite: "lax",
+                    maxAge: 60 * 60 * 1000,
+                    path: "/"
+                });
                 return res.status(200).json({
                     status:true,
                     message:"Login Successfully Done",
-                    token:token,
-                    user:{
+                    data:{
                         id:user.id,
-                        email:user.email
+                        email:user.email,
+                        name:user.name,
                     }
                 })
             }
         }
         catch(error){
             console.log(error);
-            return res.status(400).json({
+            return res.status(500).json({
                 status:false,
-                message:"Internal Server Error"
+                message:"Server Internal Error Please Check It"
             })
         }
     })
