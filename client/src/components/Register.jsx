@@ -1,124 +1,166 @@
-import axios from 'axios';
-import React from 'react';
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-function Register()
-{
-    let [value,setValue]=useState({
-        name:"",
-        email:"",
-        password:""
-    })
-    let [message,setMessage]=useState("");
-    let [inputError,setInputError]=useState({});
-    let navigate=useNavigate();
-    function validate()
-    {
-        let error={};
-        if(!value.name.trim())
-        {
-            error.name="Name Field Is Required";
+import axios from "axios";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+function Register() {
+    const [value, setValue] = useState({ name: "", email: "", password: "" });
+    const [message, setMessage] = useState("");
+    const [inputError, setInputError] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const navigate = useNavigate();
+
+    const handleChange = (event) => {
+        const { name, value: inputValue } = event.target;
+        setValue((current) => ({ ...current, [name]: inputValue }));
+        setInputError((current) => ({ ...current, [name]: "" }));
+        setMessage("");
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        const errors = {};
+
+        if (!value.name.trim()) {
+            errors.name = "Enter your name.";
+        } else if (value.name.trim().length < 3) {
+            errors.name = "Your name must be at least 3 characters.";
         }
-        else if(value.name.trim().length<3)
-        {
-            error.name="Name FieldMust Contain Above 3 Characters";
+        if (!value.email.trim()) {
+            errors.email = "Enter your email address.";
         }
-        if(!value.email.trim()){
-            error.email="Email Field Is Required";
+        if (!value.password.trim()) {
+            errors.password = "Create a password.";
+        } else if (value.password.length < 6) {
+            errors.password = "Your password must be at least 6 characters.";
         }
-        if(!value.password.trim())
-        {
-            error.password="Password Field Is Required";
+
+        setInputError(errors);
+        if (Object.keys(errors).length > 0) return;
+
+        setIsSubmitting(true);
+        setMessage("");
+        try {
+            const response = await axios.post("http://localhost:8000/register", {
+                name: value.name.trim(),
+                email: value.email.trim(),
+                password: value.password
+            });
+
+            setMessage(response.data.message || "Your account has been created.");
+            setValue({ name: "", email: "", password: "" });
+            window.setTimeout(() => navigate("/", { replace: true }), 1400);
+        } catch (error) {
+            setMessage(
+                error.response?.data?.message ||
+                "We couldn't create your account. Please check your connection and try again."
+            );
+        } finally {
+            setIsSubmitting(false);
         }
-        else if(value.password.trim().length<6)
-        {
-            error.password="Password Field Must Contain 6 Characters"
-        }
-        setInputError(error);
-        return Object.keys(error).length===0;
-    }
-    let handleChange=(e)=>{
-        let {name,value}=e.target;
-        setValue((preValue)=>{
-            return (
-                {
-                    ...preValue,
-                    [name]:value
-                }
-            )
-        })
-    }
-    let handleSubmit=async(e)=>{
-        e.preventDefault();
-        if(!validate())
-        {
-            return ;
-        }
-        try{
-            let response=await axios.post("http://localhost:8000/register",value);
-            if(response.data.message)
-            {
-                setMessage(response.data.message);
-                setInputError({});
-                setValue({
-                    name:"",
-                    email:"",
-                    password:""
-                })
-                setTimeout(()=>{
-                    navigate("/")
-                },2000)
-            }
-        }
-        catch(error)
-        {
-            if(error.response && error.response.data && error.response.data.message)
-            {
-                setMessage(error.response.data.message);
-            }
-            else{
-                setMessage(error.message);
-            }
-        }
-    }
+    };
+
     return (
-        <>
-            <div>
-                <div>
-                    <h1>Registration Page</h1>
+        <main className="auth-page auth-page--register">
+            <section className="auth-card" aria-labelledby="register-title">
+                <div className="auth-brand">
+                    <span className="brand-mark" aria-hidden="true">C</span>
+                    <span>Campus Portal</span>
                 </div>
-                <div>
-                    <form onSubmit={handleSubmit}>
-                        <div>
-                            <label htmlFor="name">User Name</label>
-                            <input type="text" name='name' placeholder='Enter User Name' value={value.name} onChange={handleChange}/>
-                            { inputError.name && ( <p style={{color:"red"}}>{inputError.name}</p> ) }
-                        </div>
-                        <div>
-                            <label htmlFor="email">User Email</label>
-                            <input type="email" name='email' placeholder='Enter User Email' value={value.email} onChange={handleChange}/>
-                            { inputError.email && ( <p style={{color:"red"}}>{inputError.email}</p> ) }
-                        </div>
-                        <div>
-                            <label htmlFor="password">User Password</label>
-                            <input type="password" name='password' placeholder='Enter User Password' value={value.password} onChange={handleChange}/>
-                            { inputError.email && ( <p style={{color:"red"}}>{inputError.email}</p> ) }
-                        </div>
-                        {
-                            message && (
-                                <h3 style={{color:"blue"}}>{message}</h3>
-                            )
-                        }
-                        <div>
-                            <button type='submit'>Register Now</button>
-                        </div>
-                    </form>
-                    <div>
-                        <button><Link to="/">If U Have Account Please Login</Link></button>
+
+                <div className="auth-intro">
+                    <span className="eyebrow">GET STARTED</span>
+                    <h1 id="register-title">Create your account</h1>
+                    <p>Join your campus workspace in just a few steps.</p>
+                </div>
+
+                <form className="auth-form" onSubmit={handleSubmit} noValidate>
+                    <div className="field">
+                        <label htmlFor="register-name">Full name</label>
+                        <input
+                            id="register-name"
+                            type="text"
+                            name="name"
+                            autoComplete="name"
+                            placeholder="e.g. Alex Morgan"
+                            value={value.name}
+                            onChange={handleChange}
+                            aria-invalid={Boolean(inputError.name)}
+                            aria-describedby={inputError.name ? "register-name-error" : undefined}
+                        />
+                        {inputError.name && (
+                            <span className="field-error" id="register-name-error">{inputError.name}</span>
+                        )}
+                    </div>
+
+                    <div className="field">
+                        <label htmlFor="register-email">Email address</label>
+                        <input
+                            id="register-email"
+                            type="email"
+                            name="email"
+                            autoComplete="email"
+                            placeholder="you@school.edu"
+                            value={value.email}
+                            onChange={handleChange}
+                            aria-invalid={Boolean(inputError.email)}
+                            aria-describedby={inputError.email ? "register-email-error" : undefined}
+                        />
+                        {inputError.email && (
+                            <span className="field-error" id="register-email-error">{inputError.email}</span>
+                        )}
+                    </div>
+
+                    <div className="field">
+                        <label htmlFor="register-password">Password</label>
+                        <input
+                            id="register-password"
+                            type="password"
+                            name="password"
+                            autoComplete="new-password"
+                            placeholder="At least 6 characters"
+                            value={value.password}
+                            onChange={handleChange}
+                            aria-invalid={Boolean(inputError.password)}
+                            aria-describedby={inputError.password ? "register-password-error" : undefined}
+                        />
+                        {inputError.password && (
+                            <span className="field-error" id="register-password-error">{inputError.password}</span>
+                        )}
+                    </div>
+
+                    <p className="role-note">
+                        New accounts are created as student accounts. Faculty access is assigned by an administrator.
+                    </p>
+
+                    {message && (
+                        <p className="form-message" role="status">{message}</p>
+                    )}
+
+                    <button className="button button--primary button--full" type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? "Creating account..." : "Create account"}
+                        {!isSubmitting && <span aria-hidden="true">→</span>}
+                    </button>
+                </form>
+
+                <p className="auth-switch">
+                    Already have an account? <Link to="/">Sign in</Link>
+                </p>
+            </section>
+            <aside className="auth-aside auth-aside--register" aria-label="Campus Portal information">
+                <div className="aside-orb aside-orb--one" />
+                <div className="aside-orb aside-orb--two" />
+                <div className="aside-content">
+                    <span className="aside-label">A BETTER WAY TO STAY IN SYNC</span>
+                    <h2>Get your campus community moving together.</h2>
+                    <p>One secure workspace for the people and information that keep learning on track.</p>
+                    <div className="aside-footer">
+                        <span className="aside-dot" />
+                        Welcome to your campus workspace.
                     </div>
                 </div>
-            </div>
-        </>
-    )
+            </aside>
+        </main>
+    );
 }
+
 export default Register;

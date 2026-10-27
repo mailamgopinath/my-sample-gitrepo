@@ -5,6 +5,7 @@ import Login from './components/Login';
 import Student from './components/Student';
 import Dashboard from './Dashboard';
 import ProtectedRoute from './ProtectedRoute';
+import './App.css';
 function App() {
 
   return (
